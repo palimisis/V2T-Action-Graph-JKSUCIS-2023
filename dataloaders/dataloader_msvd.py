@@ -1,13 +1,11 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
-from torch.utils.data import Dataset
-import numpy as np
 import pickle
+
+import numpy as np
 from rawvideo_util import RawVideoExtractor
+from torch.utils.data import Dataset
 
 # Based on https://github.com/ArrowLuo/CLIP4Clip
 
@@ -89,7 +87,7 @@ class MSVD_Loader(Dataset):
         return len(self.id_dict)
 
     def _get_rawvideo(self, choice_video_ids):
-        video_mask = np.zeros((len(choice_video_ids), self.max_frames), dtype=np.long)
+        video_mask = np.zeros((len(choice_video_ids), self.max_frames), dtype=np.int64)
         max_video_length = [0] * len(choice_video_ids)
 
 
@@ -100,14 +98,10 @@ class MSVD_Loader(Dataset):
 
             raw_video_data,shapes = self.rawVideoExtractor.get_video_data(video_path)
             raw_video_data = raw_video_data['video']
-            
-              # Pair x L x T x 3 x H x W
-            video = np.zeros((len(choice_video_ids), self.max_frames, 1, 3,
-                              shapes[2], shapes[3]), dtype=np.float)
 
             # Pair x L x T x 3 x H x W
             video = np.zeros((len(choice_video_ids), self.max_frames, 1, 3,
-                              shapes[2], shapes[3]), dtype=np.float)
+                              shapes[2], shapes[3]), dtype=float)
 
             if len(raw_video_data.shape) > 3:
                 raw_video_data_clip = raw_video_data
