@@ -127,22 +127,6 @@ model_state_dict = torch.load(model_file, map_location='cuda')
 cache_dir = args.cache_dir if args.cache_dir else os.path.join(str(PYTORCH_PRETRAINED_BERT_CACHE), 'distributed')
 # model = CLIP4Clip.from_pretrained(args.cross_model, cache_dir=cache_dir, state_dict=model_state_dict, task_config=args)
 
-def setup(rank, world_size):
-    os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12355'
-    dist.init_process_group("nccl", rank=rank, world_size=world_size)
-
-def cleanup():
-    dist.destroy_process_group()
-
-def init_model(rank, world_size):
-    setup(rank, world_size)
-    
-    model = CLIP4Clip.from_pretrained(args.cross_model, cache_dir=cache_dir, state_dict=model_state_dict, task_config=args)
-    model = model.to(rank)
-    model = DDP(model, device_ids=[rank])
-    
-    return model
 
 # Use this function to initialize the model
 # world_size = 2  # Number of GPUs
@@ -199,7 +183,27 @@ NUM_PATCHES = 9
 #                 os = np.zeros((NUM_PATCHES,512)) # 512 is dimension of the extracted features
 #             f.create_dataset(video_id+'-'+str(o), data = os)
 
+import os
+import torch
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.multiprocessing as mp
+
+def setup(rank, world_size):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+    if not dist.is_initialized():
+        dist.init_process_group("nccl", rank=rank, world_size=world_size)
+
+def cleanup():
+    if dist.is_initialized():
+        dist.destroy_process_group()
+
+def init_model(rank, world_size):
+    model = CLIP4Clip.from_pretrained(args.cross_model, cache_dir=cache_dir, state_dict=model_state_dict, task_config=args)
+    model = model.to(rank)
+    model = DDP(model, device_ids=[rank])
+    return model
 
 def main(rank, world_size):
     setup(rank, world_size)
@@ -241,4 +245,3 @@ def main(rank, world_size):
 if __name__ == "__main__":
     world_size = 2
     mp.spawn(main, args=(world_size,), nprocs=world_size, join=True)
-
