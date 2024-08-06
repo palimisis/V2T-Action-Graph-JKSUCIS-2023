@@ -29,8 +29,8 @@ from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 import pickle
 import pathlib
 
-from dataloaders.dataloader_msrvtt import MSRVTT_RawDataLoader
-from dataloaders.dataloader_msvd import MSVD_Loader
+from .dataloaders.dataloader_msrvtt import MSRVTT_RawDataLoader
+from .dataloaders.dataloader_msvd import MSVD_Loader
 
 # In[2]:
 
