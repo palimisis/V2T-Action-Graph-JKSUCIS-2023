@@ -7,7 +7,7 @@ import os
 from torch.utils.data import Dataset
 import numpy as np
 import pickle
-from rawvideo_util import RawVideoExtractor
+from .rawvideo_util import RawVideoExtractor
 
 # Based on https://github.com/ArrowLuo/CLIP4Clip
 
