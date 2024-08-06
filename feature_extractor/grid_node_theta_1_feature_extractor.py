@@ -16,6 +16,13 @@ import h5py
 from dataloaders.dataloader_msrvtt_patch import MSRVTT_RawDataLoader
 from dataloaders.dataloader_msvd_patch import MSVD_Loader
 
+
+import torch.nn as nn
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+
+
+
 # ## Generate Node Feature
 
 # #### Path Specification
@@ -118,16 +125,38 @@ epoch = 5 # Trained CLIP4Clip best model epoch
 model_file = os.path.join(args.output_dir, "pytorch_model.bin.{}".format(epoch-1))
 model_state_dict = torch.load(model_file, map_location='cuda')
 cache_dir = args.cache_dir if args.cache_dir else os.path.join(str(PYTORCH_PRETRAINED_BERT_CACHE), 'distributed')
-model = CLIP4Clip.from_pretrained(args.cross_model, cache_dir=cache_dir, state_dict=model_state_dict, task_config=args)
+# model = CLIP4Clip.from_pretrained(args.cross_model, cache_dir=cache_dir, state_dict=model_state_dict, task_config=args)
 
+def setup(rank, world_size):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+    dist.init_process_group("nccl", rank=rank, world_size=world_size)
+
+def cleanup():
+    dist.destroy_process_group()
+
+def init_model(rank, world_size):
+    setup(rank, world_size)
+    
+    model = CLIP4Clip.from_pretrained(args.cross_model, cache_dir=cache_dir, state_dict=model_state_dict, task_config=args)
+    model = model.to(rank)
+    model = DDP(model, device_ids=[rank])
+    
+    return model
+
+# Use this function to initialize the model
+# world_size = 2  # Number of GPUs
+# model = init_model(args.local_rank, world_size)
+# clip = model.module.clip
+# clip.eval()
 
 # In[11]:
 
 
-device = torch.device('cuda:0')
-clip = model.clip.to(device)
-clip.eval()
-print()
+# device = torch.device('cuda:0')
+# clip = model.clip.to(device)
+# clip.eval()
+# print()
 
 
 # #### Node Feature File Generation
@@ -143,30 +172,73 @@ NUM_PATCHES = 9
 
 
 # Generate node features using CLIP4Clip to extract frame representation
-with h5py.File(save_file, 'w') as f:
-    for i in tqdm(range(len(videos))):
+# with h5py.File(save_file, 'w') as f:
+#     for i in tqdm(range(len(videos))):
 
-        video_id, video_patches, video_mask = videos[i]
-        length_frames = video_patches.shape[2]
-        outputs = []
-        for p in range(len(video_patches)):
-            video=video_patches[p]
-            tensor = video[0]
-            tensor = tensor[video_mask[0]==1,:]
-            tensor = torch.as_tensor(tensor).float()
-            video_frame,num,channel,h,w = tensor.shape
-            tensor = tensor.view(video_frame*num, channel, h, w)
+#         video_id, video_patches, video_mask = videos[i]
+#         length_frames = video_patches.shape[2]
+#         outputs = []
+#         for p in range(len(video_patches)):
+#             video=video_patches[p]
+#             tensor = video[0]
+#             tensor = tensor[video_mask[0]==1,:]
+#             tensor = torch.as_tensor(tensor).float()
+#             video_frame,num,channel,h,w = tensor.shape
+#             tensor = tensor.view(video_frame*num, channel, h, w)
 
-            video_frame,channel,h,w = tensor.shape
+#             video_frame,channel,h,w = tensor.shape
 
-            output = clip.encode_image(tensor.to(device), video_frame=video_frame).float().to(device)
-            output = output.detach().cpu().numpy()
-            outputs.append(output)
-        outputs = np.stack(outputs)
-        for o in range(len(video_mask[0])): # Iterate over frames
-            if o < outputs.shape[1]:
-                os = outputs[:, o, :]
-            else:
-                os = np.zeros((NUM_PATCHES,512)) # 512 is dimension of the extracted features
-            f.create_dataset(video_id+'-'+str(o), data = os)
+#             output = clip.encode_image(tensor.to(device), video_frame=video_frame).float().to(device)
+#             output = output.detach().cpu().numpy()
+#             outputs.append(output)
+#         outputs = np.stack(outputs)
+#         for o in range(len(video_mask[0])): # Iterate over frames
+#             if o < outputs.shape[1]:
+#                 os = outputs[:, o, :]
+#             else:
+#                 os = np.zeros((NUM_PATCHES,512)) # 512 is dimension of the extracted features
+#             f.create_dataset(video_id+'-'+str(o), data = os)
+
+import torch.multiprocessing as mp
+
+def main(rank, world_size):
+    setup(rank, world_size)
+    model = init_model(rank, world_size)
+    clip = model.module.clip
+    clip.eval()
+
+    device = torch.device(f'cuda:{rank}')
+
+    # Generate node features using CLIP4Clip to extract frame representation
+    with h5py.File(save_file, 'w') as f:
+        for i in tqdm(range(rank, len(videos), world_size)):
+            video_id, video_patches, video_mask = videos[i]
+            length_frames = video_patches.shape[2]
+            outputs = []
+            for p in range(len(video_patches)):
+                video = video_patches[p]
+                tensor = video[0]
+                tensor = tensor[video_mask[0]==1,:]
+                tensor = torch.as_tensor(tensor).float()
+                video_frame,num,channel,h,w = tensor.shape
+                tensor = tensor.view(video_frame*num, channel, h, w)
+
+                video_frame,channel,h,w = tensor.shape
+
+                output = clip.encode_image(tensor.to(device), video_frame=video_frame).float().to(device)
+                output = output.detach().cpu().numpy()
+                outputs.append(output)
+            outputs = np.stack(outputs)
+            for o in range(len(video_mask[0])):
+                if o < outputs.shape[1]:
+                    os = outputs[:, o, :]
+                else:
+                    os = np.zeros((NUM_PATCHES,512))
+                f.create_dataset(video_id+'-'+str(o), data = os)
+
+    cleanup()
+
+if __name__ == "__main__":
+    world_size = 2
+    mp.spawn(main, args=(world_size,), nprocs=world_size, join=True)
 
