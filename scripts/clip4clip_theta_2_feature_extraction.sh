@@ -9,6 +9,4 @@
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate action_graph_env
 
-
-cd feature_extractor
-ipython -c "%run clip4clip_theta_2_feature_extraction.ipynb"
+python feature_extractor/clip4clip_theta_2_feature_extraction.py
