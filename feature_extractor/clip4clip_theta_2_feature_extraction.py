@@ -2,8 +2,9 @@
 # coding: utf-8
 
 # In[1]:
-
-
+import os.path
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import os
 import cv2
 import numpy as np
@@ -29,8 +30,8 @@ from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 import pickle
 import pathlib
 
-from .dataloaders.dataloader_msrvtt import MSRVTT_RawDataLoader
-from .dataloaders.dataloader_msvd import MSVD_Loader
+from dataloaders.dataloader_msrvtt import MSRVTT_RawDataLoader
+from dataloaders.dataloader_msvd import MSVD_Loader
 
 # In[2]:
 

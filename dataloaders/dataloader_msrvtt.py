@@ -12,7 +12,7 @@ from collections import defaultdict
 import json
 import cv2
 import random
-from rawvideo_util import RawVideoExtractor
+from .rawvideo_util import RawVideoExtractor
 from PIL import Image
 
 # Based on https://github.com/ArrowLuo/CLIP4Clip
