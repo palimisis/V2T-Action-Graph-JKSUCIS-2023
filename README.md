@@ -52,7 +52,7 @@ Raw videos can be downloaded from this [link](https://www.cs.utexas.edu/users/ml
 ```bash
 ├── model
 │   ├── i3d
-├── modules # Copy the files from CLIP4Clip repository: https://github.com/ArrowLuo/CLIP4Clip/tree/master/modules
+├── c4c_modules # Copy the files from CLIP4Clip repository: https://github.com/ArrowLuo/CLIP4Clip/tree/master/modules
 ├── pretrained 
 │   ├── [trained CLIP4Clip model].bin # Train your own PyTorch CLIP4Clip model
 │   ├── rgb_imagenet.pt # Download I3D model: https://github.com/piergiaj/pytorch-i3d/blob/master/models/rgb_imagenet.pt
