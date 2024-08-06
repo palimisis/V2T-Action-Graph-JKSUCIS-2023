@@ -7,10 +7,10 @@ import logging
 import torch
 from torch import nn
 
-from modules.until_module import PreTrainedModel, AllGather, CrossEn
-from modules.module_cross import CrossModel, CrossConfig, Transformer as TransformerClip
+from c4c_modules.until_module import PreTrainedModel, AllGather, CrossEn
+from c4c_modules.module_cross import CrossModel, CrossConfig, Transformer as TransformerClip
 
-from modules.module_clip import CLIP, convert_weights
+from c4c_modules.module_clip import CLIP, convert_weights
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 
 logger = logging.getLogger(__name__)
