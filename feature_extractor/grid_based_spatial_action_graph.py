@@ -54,7 +54,7 @@ class args:
 i3d = InceptionI3d(400, in_channels=3)
 
 # Pretrained model can be downloaded from here: https://github.com/piergiaj/pytorch-i3d
-i3d.load_state_dict(torch.load(os.path.join(args.root, 'pretrained', 'rgb_imagenet.pt')))
+i3d.load_state_dict(torch.load(os.path.join('feature_extractor', 'pretrained', 'rgb_imagenet.pt')))
 i3d = i3d.to(device)
 i3d.eval()
 print()
