@@ -3,6 +3,9 @@
 
 # In[12]:
 
+import os.path
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import os
 import cv2
