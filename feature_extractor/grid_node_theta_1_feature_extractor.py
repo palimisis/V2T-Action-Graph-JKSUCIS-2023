@@ -13,6 +13,7 @@ from tqdm import tqdm
 import glob
 import pathlib
 import h5py
+import numpy as np
 
 from dataloaders.dataloader_msrvtt_patch import MSRVTT_RawDataLoader
 from dataloaders.dataloader_msvd_patch import MSVD_Loader
@@ -126,7 +127,7 @@ model = CLIP4Clip.from_pretrained(args.cross_model, cache_dir=cache_dir, state_d
 # In[22]:
 
 
-device = torch.device('cuda:0')
+device = torch.device('cuda')
 clip = model.clip.to(device)
 clip.eval()
 print()
@@ -145,30 +146,31 @@ NUM_PATCHES = 9
 
 
 # Generate node features using CLIP4Clip to extract frame representation
-with h5py.File(save_file, 'w') as f:
-    for i in tqdm(range(len(videos))):
+with torch.no_grad():
+    with h5py.File(save_file, 'w') as f:
+        for i in tqdm(range(len(videos))):
 
-        video_id, video_patches, video_mask = videos[i]
-        length_frames = video_patches.shape[2]
-        outputs = []
-        for p in range(len(video_patches)):
-            video=video_patches[p]
-            tensor = video[0]
-            tensor = tensor[video_mask[0]==1,:]
-            tensor = torch.as_tensor(tensor).float()
-            video_frame,num,channel,h,w = tensor.shape
-            tensor = tensor.view(video_frame*num, channel, h, w)
+            video_id, video_patches, video_mask = videos[i]
+            length_frames = video_patches.shape[2]
+            outputs = []
+            for p in range(len(video_patches)):
+                video=video_patches[p]
+                tensor = video[0]
+                tensor = tensor[video_mask[0]==1,:]
+                tensor = torch.as_tensor(tensor).float()
+                video_frame,num,channel,h,w = tensor.shape
+                tensor = tensor.view(video_frame*num, channel, h, w)
 
-            video_frame,channel,h,w = tensor.shape
+                video_frame,channel,h,w = tensor.shape
 
-            output = clip.encode_image(tensor.to(device), video_frame=video_frame).float().to(device)
-            output = output.detach().cpu().numpy()
-            outputs.append(output)
-        outputs = np.stack(outputs)
-        for o in range(len(video_mask[0])): # Iterate over frames
-            if o < outputs.shape[1]:
-                os = outputs[:, o, :]
-            else:
-                os = np.zeros((NUM_PATCHES,512)) # 512 is dimension of the extracted features
-            f.create_dataset(video_id+'-'+str(o), data = os)
+                output = clip.encode_image(tensor.to(device), video_frame=video_frame).float().to(device)
+                output = output.detach().cpu().numpy()
+                outputs.append(output)
+            outputs = np.stack(outputs)
+            for o in range(len(video_mask[0])): # Iterate over frames
+                if o < outputs.shape[1]:
+                    os = outputs[:, o, :]
+                else:
+                    os = np.zeros((NUM_PATCHES,512)) # 512 is dimension of the extracted features
+                f.create_dataset(video_id+'-'+str(o), data = os)
 

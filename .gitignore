@@ -8,3 +8,9 @@ __pycache__/
 *.pt
 *.gz
 .idea
+*.err
+*.out
+extracted_features
+*.tar
+*.zip
+*.pkl
