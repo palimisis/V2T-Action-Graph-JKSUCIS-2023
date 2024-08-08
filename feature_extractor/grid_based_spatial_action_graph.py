@@ -19,7 +19,7 @@ import torchvision.transforms as transforms
 
 from PIL import Image
 import pathlib
-from .model.i3d.InceptionI3d import *
+from feature_extractor.model.i3d.InceptionI3d import *
 
 device = torch.device('cuda')
 
