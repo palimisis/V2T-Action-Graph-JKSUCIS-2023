@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=luke
+#SBATCH --partition=yoda
 #SBATCH --ntasks 1
 #SBATCH --gres=gpu:1
 #SBATCH --time=03:00:00
