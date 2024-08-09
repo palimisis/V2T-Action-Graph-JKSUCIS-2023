@@ -124,7 +124,8 @@ else:
     ids = [int(list(x.keys())[0].split("video")[1]) for x in stg] 
 contents = stg.copy()
 stg = [x for _,x in sorted(zip(ids,contents))]
-stg[:5], stg[-5:]
+
+stg = stg[:985]
 
 
 # In[ ]:
@@ -215,7 +216,7 @@ for g in tqdm(datas):
 
 
 # Save
-action_graph = path_to_saved_models+'/FinalGraph.pickle' # '/<desired file name>.pickle'
+action_graph = path_to_saved_models+'/FinalGraph_1.pickle' # '/<desired file name>.pickle'
 with open(action_graph, 'wb') as fp:
      pickle.dump(datas, fp)
         
