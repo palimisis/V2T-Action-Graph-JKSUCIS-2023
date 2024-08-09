@@ -30,7 +30,7 @@ import gc
 
 # Arguments
 class args:
-    dataset = 'msrvtt' # or dataset = 'msvd'
+    dataset = 'msvd' # or dataset = 'msvd'
 
 
 # In[ ]:
