@@ -157,11 +157,11 @@ class MSVD_Caption_DataLoader(Dataset):
     def _get_text(self, video_id, caption=None):
         k = 1
         choice_video_ids = [video_id]
-        pairs_text = np.zeros((k, self.max_words), dtype=np.long)
+        pairs_text = np.zeros((k, self.max_words), dtype=np.int64)
 
-        pairs_input_caption_ids = np.zeros((k, self.max_words), dtype=np.long)
-        pairs_output_caption_ids = np.zeros((k, self.max_words), dtype=np.long)
-        pairs_decoder_mask = np.zeros((k, self.max_words), dtype=np.long)
+        pairs_input_caption_ids = np.zeros((k, self.max_words), dtype=np.int64)
+        pairs_output_caption_ids = np.zeros((k, self.max_words), dtype=np.int64)
+        pairs_decoder_mask = np.zeros((k, self.max_words), dtype=np.int64)
 
         for i, video_id in enumerate(choice_video_ids):
             words = []
@@ -215,11 +215,11 @@ class MSVD_Caption_DataLoader(Dataset):
 
     def _get_video(self, choice_video_ids):
         # print(choice_video_ids)
-        video_mask = np.zeros((len(choice_video_ids), self.max_frames), dtype=np.long)
+        video_mask = np.zeros((len(choice_video_ids), self.max_frames), dtype=np.int64)
 
         max_video_length = [0] * len(choice_video_ids)
 
-        video = np.zeros((len(choice_video_ids), self.max_frames, self.feature_size), dtype=np.float)
+        video = np.zeros((len(choice_video_ids), self.max_frames, self.feature_size), dtype=float)
         for i, video_id in enumerate(choice_video_ids):
             video_slice = self.feature_dict[video_id]
 
@@ -300,7 +300,7 @@ class MSVD_Caption_DataLoader(Dataset):
         # print(chosen_keys)
         fo_input, stgraph = {}, {}
         for key in chosen_keys:
-            fo_input[key] = sparse.csr_matrix(np.array(fo_file.get(key)).astype(np.float))
+            fo_input[key] = sparse.csr_matrix(np.array(fo_file.get(key)).astype(float))
             stgraph[key] = stgraph_file.get(key)
 
         return fo_input, stgraph
