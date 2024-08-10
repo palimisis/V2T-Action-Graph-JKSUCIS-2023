@@ -102,7 +102,7 @@ def get_args(description='CaptionGenerator'):
     parser.add_argument("--datatype", default="msrvtt", type=str, help="Point the dataset `msrvtt` to finetune.")
 
     parser.add_argument("--world_size", default=0, type=int, help="distribted training")
-    parser.add_argument("--local_rank", default=0, type=int, help="distribted training")
+    parser.add_argument("--local-rank", default=0, type=int, help="distribted training")
     parser.add_argument('--coef_lr', type=float, default=0.1, help='coefficient for bert branch.')
     parser.add_argument('--use_mil', action='store_true', help="Whether use MIL as Miech et. al. (2020).")
     parser.add_argument('--sampled_use_mil', action='store_true', help="Whether use MIL, has a high priority than use_mil.")
@@ -153,6 +153,7 @@ def set_seed_logger(args):
     torch.backends.cudnn.deterministic = True
 
     world_size = torch.distributed.get_world_size()
+    print("set_seed_logger: local_rank: ", args.local_rank)
     torch.cuda.set_device(args.local_rank)
     args.world_size = world_size
 

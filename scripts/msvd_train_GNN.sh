@@ -1,9 +1,12 @@
 #!/bin/bash
 #SBATCH --partition=yoda
 #SBATCH --ntasks 1
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:2
 #SBATCH --time=03:00:00
 #SBATCH --cpus-per-task=8
+#SBATCH --mem=200GB
+
+# export TORCH_CPP_LOG_LEVEL=DEBUG
 
 # Activate Anaconda work environment
 source ~/miniconda3/etc/profile.d/conda.sh
@@ -11,7 +14,7 @@ conda activate action_graph_env
 
 # Setup
 DATATYPE=msvd
-N_GPU=1
+N_GPU=2
 N_THREAD=8
 
 # PATH to files
@@ -26,8 +29,7 @@ LEARNING_RATE=(1e-4)
 
 for lr in "${LEARNING_RATE[@]}"
 do
-#    python -m torch.distributed.launch
-    torchrun --nproc_per_node=${N_GPU} \
+    python -m torch.distributed.launch --nproc_per_node=${N_GPU} \
     ./main_task_caption_GNN.py --do_train --num_thread_reader=${N_THREAD} \
     --epochs=50 --batch_size=128 --n_display=50 --gradient_accumulation_steps 2 \
     --data_path ${DATA_PATH} --features_path ${FEATURES_PATH} \
